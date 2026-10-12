@@ -1,0 +1,2373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#151515">
+  <title>Dashboard | Alcans Telecom</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #151515;
+      --panel: #1d1d1d;
+      --panel2: #252525;
+      --border: #383838;
+      --text: #f5f5f5;
+      --muted: #a3a3a3;
+      --accent: #ff6d01;
+      --danger: #ef4444;
+      --good: #22c55e;
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 Arial, Helvetica, sans-serif;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .topbar {
+      min-height: 66px;
+      border-bottom: 1px solid var(--border);
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brandmark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ff8a24, #c64a00);
+      display: grid;
+      place-items: center;
+      font-size: 21px;
+      font-weight: 900;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .08em;
+    }
+
+    .brand strong {
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wrap {
+      width: min(1240px, 100%);
+      margin: auto;
+      padding: 28px 20px 48px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .btn.danger {
+      border-color: #7f1d1d;
+      background: #351515;
+      color: #fecaca;
+    }
+
+    .btn.small {
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    h1 {
+      font-size: clamp(30px, 5vw, 48px);
+      letter-spacing: -.04em;
+      line-height: 1.08;
+      margin: 12px 0;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 25px;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    p {
+      margin-top: 6px;
+    }
+
+    .lead {
+      max-width: 650px;
+      color: #b4b4b4;
+      font-size: 15px;
+    }
+
+    .home {
+      min-height: calc(100vh - 66px);
+      display: grid;
+      place-items: center;
+      padding: 36px 20px;
+    }
+
+    .home-inner {
+      max-width: 760px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .home-logo {
+      margin: 0 auto 22px;
+      width: 78px;
+      height: 78px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #ff8a24, #c64a00);
+      display: grid;
+      place-items: center;
+      font-size: 35px;
+      font-weight: 900;
+    }
+
+    .home-inner .lead {
+      margin: 0 auto 28px;
+    }
+
+    .home-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      text-align: left;
+      margin: 32px auto 0;
+    }
+
+    .choice {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      color: var(--text);
+      text-align: left;
+      transition: .15s;
+    }
+
+    .choice:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .choice h3 {
+      margin: 0 0 6px;
+    }
+
+    .choice p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .choice-icon {
+      flex: 0 0 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: #332011;
+      color: #ff8b32;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field label {
+      font-size: 11px;
+      color: #b9b9b9;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #3a3a3a;
+      background: #292929;
+      color: white;
+      border-radius: 9px;
+      min-width: 0;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .field option {
+      background: #292929;
+    }
+
+    .login-card {
+      max-width: 490px;
+      margin: 24px auto;
+    }
+
+    .login-card .panel {
+      padding: 26px;
+    }
+
+    .login-card .field {
+      margin: 15px 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      grid-column: 1 / -1;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      margin: 6px 0 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 15px;
+    }
+
+    .grid.kpis {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 18px 0;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kpi {
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-width: 0;
+    }
+
+    .kpi span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 28px;
+      margin-top: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi small {
+      display: block;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      padding: 10px 13px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--panel2);
+      color: #ddd;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: #39200f;
+      border-color: #8c460e;
+      color: #ff9a50;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      background: #1b1b1b;
+    }
+
+    td {
+      font-size: 12px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .notice {
+      border: 1px solid #684016;
+      background: #2a1b0e;
+      color: #ffcf9b;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      padding: 10px 12px;
+      border-radius: 9px;
+      margin-top: 12px;
+    }
+
+    .error {
+      color: #fecaca;
+      background: #351515;
+      border: 1px solid #7f1d1d;
+    }
+
+    .success {
+      color: #bbf7d0;
+      background: #102a1b;
+      border: 1px solid #166534;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #202020;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      color: #ddd;
+    }
+
+    .chart-wrap {
+      height: 280px;
+      position: relative;
+    }
+
+    .back {
+      margin-bottom: 18px;
+    }
+
+    .subhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #777;
+      font-size: 11px;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 850px) {
+      .grid.kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .topbar {
+        padding: 12px 13px;
+      }
+
+      .wrap {
+        padding: 20px 13px 36px;
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      .home-actions,
+      .grid.two {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        flex-direction: column;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid .full {
+        grid-column: auto;
+      }
+
+      .grid.kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .kpi {
+        padding: 13px;
+      }
+
+      .kpi strong {
+        font-size: 21px;
+      }
+
+      .brand strong {
+        font-size: 12px;
+      }
+
+      .brand small {
+        font-size: 8px;
+      }
+
+      .top-actions .status-label {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brandmark">A</div>
+      <div>
+        <small>ALCANS TELECOM</small>
+        <strong>Dashboard de desempenho</strong>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <span id="connectionStatus" class="pill status-label">Configuração pendente</span>
+      <button class="btn small" id="homeBtn" type="button">Início</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- INÍCIO -->
+    <section id="view-home" class="home">
+      <div class="home-inner">
+        <div class="home-logo">A</div>
+        <div class="eyebrow">Alcans Telecom</div>
+        <h1>Dashboard de<br><span style="color:var(--accent)">desempenho.</span></h1>
+        <p class="lead">Acompanhe os resultados diários e os indicadores de desempenho da sua equipe.</p>
+
+        <div class="home-actions">
+          <button class="choice" id="goLeader" type="button">
+            <span class="choice-icon">⚙</span>
+            <span>
+              <h3>Acesso do líder</h3>
+              <p>Gerencie os atendentes e os resultados da sua ilha.</p>
+            </span>
+          </button>
+
+          <button class="choice" id="goAttendant" type="button">
+            <span class="choice-icon">♙</span>
+            <span>
+              <h3>Acesso do atendente</h3>
+              <p>Consulte seu histórico e seus indicadores individuais.</p>
+            </span>
+          </button>
+
+          <button class="choice" id="goAdmin" type="button">
+            <span class="choice-icon">⌘</span>
+            <span>
+              <h3>Administração de ilhas</h3>
+              <p>Área restrita para criar e remover ilhas e gerenciar o acesso dos líderes.</p>
+            </span>
+          </button>
+        </div>
+
+        <p class="muted" style="font-size:11px;margin-top:28px">
+          Os dados serão compartilhados entre os usuários por meio do Supabase.
+        </p>
+      </div>
+    </section>
+
+    <!-- LOGIN ADMINISTRATIVO -->
+    <section id="view-admin-login" class="wrap hidden">
+      <button class="btn back" type="button" data-home>← Voltar ao início</button>
+      <div class="login-card">
+        <div class="panel">
+          <div class="eyebrow">Acesso administrativo</div>
+          <h2>Administração de ilhas</h2>
+          <p class="muted">Entre com a senha administrativa para gerenciar as ilhas e os acessos dos líderes.</p>
+          <form id="adminLoginForm">
+            <div class="field">
+              <label for="adminPassword">Senha administrativa</label>
+              <input id="adminPassword" type="password" required autocomplete="current-password" placeholder="Digite a senha administrativa" maxlength="200">
+            </div>
+            <button class="btn primary" type="submit" style="width:100%">Entrar na administração</button>
+          </form>
+          <div id="adminLoginMessage" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOGIN DO LÍDER -->
+    <section id="view-leader-login" class="wrap hidden">
+      <button class="btn back" type="button" data-home>← Voltar ao início</button>
+
+      <div class="login-card">
+        <div class="panel">
+          <div class="eyebrow">Acesso restrito</div>
+          <h2>Acesso do líder</h2>
+          <p class="muted">Selecione sua ilha e informe sua senha individual.</p>
+
+          <form id="leaderLoginForm">
+            <div class="field">
+              <label for="leaderIsland">Ilha</label>
+              <select id="leaderIsland" required>
+                <option value="">Carregando ilhas...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="leaderPassword">Sua senha</label>
+              <input id="leaderPassword" type="password" required autocomplete="current-password" placeholder="Digite sua senha" maxlength="200">
+            </div>
+
+            <button class="btn primary" type="submit" style="width:100%">Entrar no painel</button>
+          </form>
+
+          <div id="leaderLoginMessage" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOGIN DO ATENDENTE -->
+    <section id="view-attendant-login" class="wrap hidden">
+      <button class="btn back" type="button" data-home>← Voltar ao início</button>
+
+      <div class="login-card">
+        <div class="panel">
+          <div class="eyebrow">Acesso individual</div>
+          <h2>Área do atendente</h2>
+          <p class="muted">Escolha sua ilha, selecione seu nome e informe sua senha.</p>
+
+          <form id="attendantLoginForm">
+            <div class="field">
+              <label for="attendantIsland">Sua ilha</label>
+              <select id="attendantIsland" required>
+                <option value="">Carregando ilhas...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="attendantLoginName">Seu nome</label>
+              <select id="attendantLoginName" required disabled>
+                <option value="">Selecione primeiro a ilha</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="attendantLoginPassword">Sua senha</label>
+              <input id="attendantLoginPassword" type="password" required autocomplete="current-password" placeholder="Digite sua senha" maxlength="200">
+            </div>
+
+            <button class="btn primary" type="submit" style="width:100%">Consultar meus resultados</button>
+          </form>
+
+          <div id="attendantLoginMessage" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINEL ADMINISTRATIVO -->
+    <section id="view-admin" class="wrap hidden">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Área protegida</div>
+          <h1 style="font-size:34px">Administração de ilhas</h1>
+          <p>Crie ilhas, defina ou troque a senha dos líderes e remova ilhas que não serão mais utilizadas.</p>
+        </div>
+        <button class="btn" id="adminLogout" type="button">Sair</button>
+      </div>
+
+      <div class="notice">
+        Remover uma ilha também remove os atendentes, sessões e resultados vinculados a ela. A ação exige confirmação e não pode ser desfeita.
+      </div>
+
+      <div class="panel" style="margin-bottom:16px">
+        <h3>Criar nova ilha e definir o líder</h3>
+        <form id="createIslandForm" class="form-grid">
+          <div class="field">
+            <label for="newIslandName">Nome da ilha</label>
+            <input id="newIslandName" required maxlength="120" placeholder="Digite o nome oficial da ilha">
+          </div>
+          <div class="field">
+            <label for="newLeaderPassword">Senha inicial do líder</label>
+            <input id="newLeaderPassword" type="password" required minlength="8" maxlength="200" autocomplete="new-password" placeholder="Mínimo de 8 caracteres">
+          </div>
+          <div class="field">
+            <label for="newLeaderPassword2">Confirmar senha do líder</label>
+            <input id="newLeaderPassword2" type="password" required minlength="8" maxlength="200" autocomplete="new-password" placeholder="Repita a senha">
+          </div>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">+ Criar ilha</button>
+          </div>
+        </form>
+        <div id="createIslandMessage" aria-live="polite"></div>
+      </div>
+
+      <div class="panel">
+        <div class="subhead">
+          <h3>Ilhas cadastradas</h3>
+          <button class="btn small" id="adminRefreshIslands" type="button">Atualizar lista</button>
+        </div>
+        <div id="adminIslandsTable" class="empty">Carregando ilhas...</div>
+      </div>
+    </section>
+
+    <!-- PAINEL DO LÍDER -->
+    <section id="view-leader" class="wrap hidden">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow" id="leaderIslandLabel">Área restrita</div>
+          <h1 style="font-size:34px">Painel do líder</h1>
+          <p>Gerencie somente os atendentes e os resultados vinculados à sua ilha.</p>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="leaderRefresh" type="button">↻ Atualizar</button>
+          <button class="btn" id="leaderLogout" type="button">Sair</button>
+        </div>
+      </div>
+
+      <div class="notice">
+        Este painel depende das funções seguras do Supabase. As permissões precisam ser validadas no banco, não apenas na interface.
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-leader-tab="overview" type="button">Visão geral</button>
+        <button class="tab" data-leader-tab="people" type="button">Atendentes</button>
+        <button class="tab" data-leader-tab="passwords" type="button">Senhas</button>
+        <button class="tab" data-leader-tab="results" type="button">Resultados diários</button>
+      </div>
+
+      <div id="leader-tab-overview">
+        <div class="grid kpis">
+          <div class="kpi"><span>Atendentes ativos</span><strong id="kpiPeople">0</strong><small>Na sua ilha</small></div>
+          <div class="kpi"><span>Registros diários</span><strong id="kpiRecords">0</strong><small>Resultados cadastrados</small></div>
+          <div class="kpi"><span>CSAT médio</span><strong id="kpiCsat">0%</strong><small>Meta: 90%</small></div>
+          <div class="kpi"><span>Produtividade média</span><strong id="kpiProd">0</strong><small>Por dia</small></div>
+          <div class="kpi"><span>Produtividade/hora</span><strong id="kpiProdHora">0</strong><small>Produtividade ÷ 6 horas</small></div>
+          <div class="kpi"><span>TMA Web</span><strong id="kpiTmaWeb">00:00</strong><small>Meta: 20 minutos</small></div>
+          <div class="kpi"><span>TMA Telefone</span><strong id="kpiTmaTel">00:00</strong><small>Meta: 5 minutos</small></div>
+          <div class="kpi"><span>Assiduidade</span><strong id="kpiAssiduidade">0%</strong><small>Média do período</small></div>
+          <div class="kpi"><span>FCR</span><strong id="kpiFcr">0%</strong><small>Meta: 90%</small></div>
+          <div class="kpi"><span>CTR</span><strong id="kpiCtr">0</strong><small>Total do período</small></div>
+          <div class="kpi"><span>Faltas</span><strong id="kpiFaltas">0</strong><small>Registros com falta</small></div>
+        </div>
+        <div class="grid two" style="margin-bottom:15px">
+          <div class="panel">
+            <h3>CSAT por dia</h3>
+            <div class="chart-wrap"><canvas id="leaderChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>Assiduidade por atendente</h3>
+            <div class="chart-wrap"><canvas id="leaderAttendanceChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>CSAT por atendente</h3>
+            <div class="chart-wrap"><canvas id="leaderCsatPeopleChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>TMA Web e Telefone</h3>
+            <div class="chart-wrap"><canvas id="leaderTmaChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>Evolução da produtividade</h3>
+            <div class="chart-wrap"><canvas id="leaderProductivityChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>Evolução do CSAT</h3>
+            <div class="chart-wrap"><canvas id="leaderCsatTrendChart"></canvas></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Últimos resultados e anotações</h3>
+          <div id="recentResults" class="empty">Nenhum resultado carregado.</div>
+        </div>
+      </div>
+
+      <div id="leader-tab-people" class="hidden">
+        <div class="panel" style="margin-bottom:16px">
+          <h3>Cadastrar atendente</h3>
+          <p class="muted">O atendente será vinculado à ilha do líder autenticado.</p>
+
+          <form id="addAttendantForm" class="form-grid">
+            <div class="field">
+              <label for="newAttendantName">Nome completo</label>
+              <input id="newAttendantName" required maxlength="120" placeholder="Nome do atendente">
+            </div>
+
+            <div class="field">
+              <label for="newAttendantPassword">Senha inicial</label>
+              <input id="newAttendantPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
+            </div>
+
+            <div class="field">
+              <label for="newAttendantPassword2">Confirmar senha</label>
+              <input id="newAttendantPassword2" type="password" required minlength="6" autocomplete="new-password" placeholder="Repita a senha">
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" type="submit">+ Cadastrar atendente</button>
+            </div>
+          </form>
+
+          <div id="addAttendantMessage" aria-live="polite"></div>
+        </div>
+
+        <div class="panel">
+          <div class="subhead">
+            <h3>Atendentes da sua ilha</h3>
+            <button class="btn small" id="peopleRefresh" type="button">Atualizar lista</button>
+          </div>
+          <div id="peopleTable" class="empty">Carregando atendentes...</div>
+        </div>
+      </div>
+
+      <div id="leader-tab-passwords" class="hidden">
+        <div class="panel">
+          <h3>Redefinir senha do atendente</h3>
+          <p class="muted">A senha atual nunca será exibida. Cadastre uma nova senha para o atendente selecionado.</p>
+
+          <form id="resetPasswordForm" class="form-grid">
+            <div class="field">
+              <label for="passwordAttendant">Atendente</label>
+              <select id="passwordAttendant" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="newPassword">Nova senha</label>
+              <input id="newPassword" type="password" minlength="6" required autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
+            </div>
+
+            <div class="field">
+              <label for="newPassword2">Confirmar senha</label>
+              <input id="newPassword2" type="password" minlength="6" required autocomplete="new-password" placeholder="Repita a senha">
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" type="submit">Salvar nova senha</button>
+            </div>
+          </form>
+
+          <div id="resetPasswordMessage" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div id="leader-tab-results" class="hidden">
+        <div class="panel" style="margin-bottom:16px">
+          <h3>Registrar ou atualizar resultado diário</h3>
+          <p class="muted">Salvar um resultado para a mesma pessoa e data deve atualizar o registro existente.</p>
+
+          <form id="resultForm" class="form-grid">
+            <div class="field">
+              <label for="resultAttendant">Atendente</label>
+              <select id="resultAttendant" required>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="resultDate">Data</label>
+              <input id="resultDate" type="date" required>
+            </div>
+
+            <div class="field">
+              <label for="resultStatus">Status do dia</label>
+              <select id="resultStatus">
+                <option value="Presença">Presença</option>
+                <option value="Falta">Falta</option>
+                <option value="Folga">Folga</option>
+                <option value="Atestado">Atestado</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="resultTotal">Total de avaliações</label>
+              <input id="resultTotal" type="number" min="0" step="1" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultSatisfied">Avaliações satisfeitas</label>
+              <input id="resultSatisfied" type="number" min="0" step="1" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultProductivity">Produtividade/dia</label>
+              <input id="resultProductivity" type="number" min="0" step="0.01" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultTmaWeb">TMA Web (minutos)</label>
+              <input id="resultTmaWeb" type="number" min="0" step="0.01" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultTmaTel">TMA telefone (minutos)</label>
+              <input id="resultTmaTel" type="number" min="0" step="0.01" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultAssiduidade">Assiduidade (%)</label>
+              <input id="resultAssiduidade" type="number" min="0" max="100" step="0.01" value="100" required>
+            </div>
+
+            <div class="field">
+              <label for="resultFcr">FCR (%)</label>
+              <input id="resultFcr" type="number" min="0" max="100" step="0.01" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultCtr">CTR (%)</label>
+              <input id="resultCtr" type="number" min="0" max="100" step="0.01" value="0" required>
+            </div>
+
+            <div class="field">
+              <label for="resultNote">Observação</label>
+              <input id="resultNote" maxlength="500" placeholder="Opcional">
+            </div>
+
+            <div class="form-actions">
+              <button class="btn primary" type="submit">Salvar resultado</button>
+              <button class="btn" type="button" id="cancelEditResult">Limpar formulário</button>
+            </div>
+          </form>
+
+          <div id="resultFormMessage" aria-live="polite"></div>
+        </div>
+
+        <div class="panel">
+          <div class="subhead">
+            <h3>Resultados registrados</h3>
+            <button class="btn small" id="resultsRefresh" type="button">Atualizar</button>
+          </div>
+          <div id="resultsTable" class="empty">Carregando resultados...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINEL DO ATENDENTE -->
+    <section id="view-attendant" class="wrap hidden">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow" id="attendantIslandLabel">Área individual</div>
+          <h1 style="font-size:34px">Olá, <span id="attendantGreeting" style="color:var(--accent)">atendente</span></h1>
+          <p>Você pode consultar apenas os resultados vinculados ao seu cadastro.</p>
+        </div>
+        <button class="btn" id="attendantLogout" type="button">Sair</button>
+      </div>
+
+      <div class="grid kpis">
+        <div class="kpi"><span>CSAT médio</span><strong id="ownCsat">0%</strong><small>Meta: 90%</small></div>
+        <div class="kpi"><span>Produtividade média</span><strong id="ownProd">0</strong><small>Por dia</small></div>
+        <div class="kpi"><span>Produtividade/hora</span><strong id="ownProdHora">0</strong><small>Produtividade ÷ 6 horas</small></div>
+        <div class="kpi"><span>TMA Web</span><strong id="ownTmaWeb">00:00</strong><small>Meta: 20 minutos</small></div>
+        <div class="kpi"><span>TMA Telefone</span><strong id="ownTmaTel">00:00</strong><small>Meta: 5 minutos</small></div>
+        <div class="kpi"><span>Assiduidade</span><strong id="ownAssiduidade">0%</strong><small>Seu histórico</small></div>
+        <div class="kpi"><span>FCR</span><strong id="ownFcr">0%</strong><small>Meta: 90%</small></div>
+        <div class="kpi"><span>CTR</span><strong id="ownCtr">0</strong><small>Total do período</small></div>
+        <div class="kpi"><span>Faltas</span><strong id="ownFaltas">0</strong><small>Registros com falta</small></div>
+        <div class="kpi"><span>Registros diários</span><strong id="ownRecords">0</strong><small>Resultados cadastrados</small></div>
+      </div>
+
+      <div class="grid two" style="margin-bottom:16px">
+        <div class="panel">
+          <h3>Minha evolução de CSAT</h3>
+          <div class="chart-wrap"><canvas id="ownChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Minha assiduidade</h3>
+          <div class="chart-wrap"><canvas id="ownAttendanceChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>Minha produtividade</h3>
+          <div class="chart-wrap"><canvas id="ownProductivityChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h3>TMA Web e Telefone</h3>
+          <div class="chart-wrap"><canvas id="ownTmaChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Meus resultados diários e anotações</h3>
+        <div id="ownResultsTable" class="empty">Carregando resultados...</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Alcans Telecom · Dashboard de desempenho</footer>
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       CONFIGURAÇÃO DO SUPABASE
+       Preencha SUPABASE_URL e SUPABASE_ANON_KEY com os dados
+       do seu projeto. A chave publishable/anon pode ser usada
+       no navegador quando o banco estiver protegido por RLS.
+       NUNCA coloque a chave service_role neste arquivo.
+       ========================================================= */
+
+    const SUPABASE_URL = "https://hodjcnkuvmpxpmhfigod.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_VeXMEQPhw4GFA5g7oFULvg_OE68fNd7";
+
+    /* =========================================================
+       NOMES DAS RPCs ESPERADAS PELO FRONT-END
+       As funções correspondentes precisam existir no Supabase.
+       Seus argumentos e retornos devem corresponder a este código.
+       ========================================================= */
+
+    const RPC = {
+      loginAdmin: "dashboard_admin_login",
+      listarIlhasAdmin: "dashboard_admin_listar_ilhas",
+      criarIlhaAdmin: "dashboard_admin_criar_ilha",
+      alterarSenhaLiderAdmin: "dashboard_admin_alterar_senha_lider",
+      removerIlhaAdmin: "dashboard_admin_remover_ilha",
+
+      listarIlhas: "dashboard_listar_ilhas",
+      listarAtendentesPublicos: "dashboard_listar_atendentes_da_ilha",
+
+      loginLider: "dashboard_login_lider",
+      loginAtendente: "dashboard_login_atendente",
+
+      listarAtendentesLider: "dashboard_lider_listar_atendentes",
+      listarResultadosLider: "dashboard_lider_listar_resultados",
+      criarAtendente: "dashboard_lider_criar_atendente",
+      alterarSenhaAtendente: "dashboard_lider_alterar_senha_atendente",
+      excluirAtendente: "dashboard_lider_excluir_atendente",
+      salvarResultado: "dashboard_lider_salvar_resultado",
+      excluirResultado: "dashboard_lider_excluir_resultado",
+
+      listarResultadosAtendente: "dashboard_atendente_listar_resultados"
+    };
+
+    /* =========================================================
+       INICIALIZAÇÃO
+       ========================================================= */
+
+    const $ = id => document.getElementById(id);
+
+    let db = null;
+    let ilhas = [];
+    let atendentesPublicos = [];
+    let people = [];
+    let results = [];
+
+    let adminSession = null;
+    let leaderSession = null;
+    let attendantSession = null;
+    let editingResultId = null;
+
+    let leaderChart = null;
+    let leaderAttendanceChart = null;
+    let leaderCsatPeopleChart = null;
+    let leaderTmaChart = null;
+    let leaderProductivityChart = null;
+    let leaderCsatTrendChart = null;
+    let ownChart = null;
+    let ownAttendanceChart = null;
+    let ownProductivityChart = null;
+    let ownTmaChart = null;
+
+    function isConfigured() {
+      return SUPABASE_URL.startsWith("https://") &&
+        !SUPABASE_URL.includes("COLE_AQUI") &&
+        SUPABASE_ANON_KEY.length > 20 &&
+        !SUPABASE_ANON_KEY.includes("COLE_AQUI");
+    }
+
+    function initializeSupabase() {
+      if (!isConfigured()) {
+        setStatus("Configure URL e chave", false);
+        return false;
+      }
+
+      if (!window.supabase?.createClient) {
+        setStatus("Biblioteca Supabase indisponível", false);
+        return false;
+      }
+
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      setStatus("Conectando ao Supabase...", false);
+      return true;
+    }
+
+    /* =========================================================
+       FUNÇÕES DE INTERFACE
+       ========================================================= */
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function fmtNumber(value, digits = 1) {
+      const number = Number(value || 0);
+      return number.toLocaleString("pt-BR", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function fmtDate(value) {
+      if (!value) return "—";
+      const [year, month, day] = String(value).slice(0, 10).split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    function todayLocal() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function csat(row) {
+      const total = Number(row.total_avaliacoes || 0);
+      return total > 0
+        ? Number(row.avaliacoes_satisfeitas || 0) / total * 100
+        : 0;
+    }
+
+    function setMessage(id, message, ok = false) {
+      const element = $(id);
+      if (!element) return;
+      element.className = message ? `message ${ok ? "success" : "error"}` : "";
+      element.textContent = message || "";
+    }
+
+    function setStatus(message, ok = false) {
+      const element = $("connectionStatus");
+      element.textContent = message;
+      element.style.color = ok ? "#86efac" : "#ddd";
+    }
+
+    function showView(name) {
+      document.querySelectorAll("main > section[id^='view-']").forEach(section => {
+        section.classList.add("hidden");
+      });
+
+      const target = $("view-" + name);
+      if (target) target.classList.remove("hidden");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function showLeaderTab(name) {
+      document.querySelectorAll("[data-leader-tab]").forEach(button => {
+        button.classList.toggle("active", button.dataset.leaderTab === name);
+      });
+
+      ["overview", "people", "passwords", "results"].forEach(tab => {
+        $("leader-tab-" + tab).classList.toggle("hidden", tab !== name);
+      });
+    }
+
+    function requireDatabase() {
+      if (!db) {
+        alert("Configure a URL e a chave do Supabase no início do código antes de usar o dashboard.");
+        return false;
+      }
+      return true;
+    }
+
+    /*
+     * IMPORTANTE:
+     * As chamadas de login devem retornar uma sessão segura gerada
+     * pelo backend. Não use apenas um booleano de sucesso.
+     *
+     * Formato esperado para líder:
+     * { autorizado: true, token: "...", ilha_id: "...", ilha_nome: "..." }
+     *
+     * Formato esperado para atendente:
+     * { autorizado: true, token: "...", atendente_id: "...",
+     *   atendente_nome: "...", ilha_id: "...", ilha_nome: "..." }
+     *
+     * O token precisa ser validado em TODAS as RPCs protegidas.
+     * A validação de senha e as permissões nunca devem depender
+     * somente deste JavaScript.
+     */
+
+    async function callRpc(name, args = {}) {
+      if (!db) throw new Error("Configure a URL e a chave do Supabase primeiro.");
+
+      const { data, error } = await db.rpc(name, args);
+
+      if (error) {
+        console.error(`Erro na RPC ${name}:`, error);
+        throw new Error(error.message || `Erro ao executar ${name}.`);
+      }
+
+      return data;
+    }
+
+    function rpcArgsForLeader(extra = {}) {
+      if (!leaderSession?.token) {
+        throw new Error("Sessão do líder inválida. Entre novamente.");
+      }
+
+      return {
+        p_token: leaderSession.token,
+        ...extra
+      };
+    }
+
+    function rpcArgsForAttendant() {
+      if (!attendantSession?.token) {
+        throw new Error("Sessão do atendente inválida. Entre novamente.");
+      }
+
+      return { p_token: attendantSession.token };
+    }
+
+    /* =========================================================
+       ILHAS E ATENDENTES DISPONÍVEIS PARA LOGIN
+       ========================================================= */
+
+    function normalizeRows(data) {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === "object") return [data];
+      return [];
+    }
+
+    function fillIslandSelect(selectId, placeholder = "Selecione sua ilha...") {
+      const select = $(selectId);
+      select.innerHTML = "";
+
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = placeholder;
+      select.appendChild(first);
+
+      ilhas.forEach(island => {
+        const option = document.createElement("option");
+        option.value = island.id;
+        option.textContent = island.nome;
+        select.appendChild(option);
+      });
+    }
+
+    async function loadIslands() {
+      if (!db) return;
+
+      try {
+        const data = await callRpc(RPC.listarIlhas);
+        ilhas = normalizeRows(data)
+          .map(row => ({
+            id: String(row.id ?? row.ilha_id ?? ""),
+            nome: String(row.nome ?? row.ilha_nome ?? row.name ?? "")
+          }))
+          .filter(row => row.id && row.nome);
+
+        fillIslandSelect("leaderIsland");
+        fillIslandSelect("attendantIsland");
+
+        if (!ilhas.length) {
+          setStatus("Nenhuma ilha cadastrada", false);
+        }
+      } catch (error) {
+        fillIslandSelect("leaderIsland", "Não foi possível carregar as ilhas");
+        fillIslandSelect("attendantIsland", "Não foi possível carregar as ilhas");
+        setStatus("Confira as RPCs do Supabase", false);
+        console.error(error);
+      }
+    }
+
+    async function loadPublicAttendants(islandId) {
+      const select = $("attendantLoginName");
+      select.innerHTML = '<option value="">Carregando atendentes...</option>';
+      select.disabled = true;
+
+      if (!islandId) {
+        select.innerHTML = '<option value="">Selecione primeiro a ilha</option>';
+        return;
+      }
+
+      try {
+        const data = await callRpc(RPC.listarAtendentesPublicos, {
+          p_ilha_id: islandId
+        });
+
+        atendentesPublicos = normalizeRows(data)
+          .map(row => ({
+            id: String(row.id ?? row.atendente_id ?? ""),
+            nome: String(row.nome ?? row.atendente_nome ?? "")
+          }))
+          .filter(row => row.id && row.nome);
+
+        select.innerHTML = '<option value="">Selecione seu nome...</option>';
+
+        atendentesPublicos.forEach(person => {
+          const option = document.createElement("option");
+          option.value = person.id;
+          option.textContent = person.nome;
+          select.appendChild(option);
+        });
+
+        select.disabled = false;
+
+        if (!atendentesPublicos.length) {
+          select.innerHTML = '<option value="">Nenhum atendente cadastrado nesta ilha</option>';
+        }
+      } catch (error) {
+        select.innerHTML = '<option value="">Erro ao carregar atendentes</option>';
+        setMessage("attendantLoginMessage", error.message);
+      }
+    }
+
+    /* =========================================================
+       LOGIN E SESSÕES
+       ========================================================= */
+
+    /* =========================================================
+       ADMINISTRAÇÃO DE ILHAS
+       Todas as operações administrativas são validadas no Supabase.
+       ========================================================= */
+
+    function rpcArgsForAdmin(extra = {}) {
+      if (!adminSession?.token) {
+        throw new Error("Sessão administrativa inválida. Entre novamente.");
+      }
+      return { p_token: adminSession.token, ...extra };
+    }
+
+    async function loginAdmin(password) {
+      const data = await callRpc(RPC.loginAdmin, { p_senha: password });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row || row.autorizado !== true || !row.token) {
+        throw new Error("Senha administrativa incorreta ou acesso não autorizado.");
+      }
+      adminSession = { token: row.token };
+    }
+
+    async function loadAdminIslands() {
+      if (!adminSession?.token) return;
+      const data = await callRpc(RPC.listarIlhasAdmin, rpcArgsForAdmin());
+      const rows = normalizeRows(data);
+      const target = $("adminIslandsTable");
+
+      if (!rows.length) {
+        target.innerHTML = '<div class="empty">Nenhuma ilha cadastrada.</div>';
+        return;
+      }
+
+      target.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ilha</th><th>Líder</th><th>Ações</th></tr></thead>
+        <tbody>
+          ${rows.map(island => {
+        const id = String(island.id ?? island.ilha_id ?? "");
+        const name = String(island.nome ?? island.ilha_nome ?? "");
+        const leaderActive = island.tem_lider === false ? "Sem líder cadastrado" : "Acesso de líder";
+        return `<tr>
+              <td>${escapeHtml(name)}</td>
+              <td><span class="pill">${escapeHtml(leaderActive)}</span></td>
+              <td><div class="row-actions">
+                <button class="btn small" type="button" data-change-leader="${escapeHtml(id)}" data-island-name="${escapeHtml(name)}">Trocar senha do líder</button>
+                <button class="btn danger small" type="button" data-remove-island="${escapeHtml(id)}" data-island-name="${escapeHtml(name)}">Remover ilha</button>
+              </div></td>
+            </tr>`;
+      }).join("")}
+        </tbody>
+      </table>
+    </div>`;
+
+      target.querySelectorAll("[data-change-leader]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const islandId = button.dataset.changeLeader;
+          const islandName = button.dataset.islandName || "esta ilha";
+          const password = prompt(`Digite a nova senha do líder de "${islandName}" (mínimo de 8 caracteres):`);
+          if (password === null) return;
+          if (password.length < 8) {
+            alert("A senha deve ter pelo menos 8 caracteres.");
+            return;
+          }
+          const confirmation = prompt("Digite novamente a nova senha para confirmar:");
+          if (confirmation === null) return;
+          if (password !== confirmation) {
+            alert("As senhas não coincidem.");
+            return;
+          }
+          try {
+            await callRpc(RPC.alterarSenhaLiderAdmin, rpcArgsForAdmin({
+              p_ilha_id: islandId,
+              p_nova_senha: password
+            }));
+            alert("Senha do líder atualizada. As sessões anteriores dessa ilha foram encerradas.");
+            await loadAdminIslands();
+          } catch (error) {
+            alert("Não foi possível alterar a senha: " + error.message);
+          }
+        });
+      });
+
+      target.querySelectorAll("[data-remove-island]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const islandId = button.dataset.removeIsland;
+          const islandName = button.dataset.islandName || "esta ilha";
+          const confirmation = confirm(
+            `ATENÇÃO: deseja remover "${islandName}"?\n\nIsso excluirá a ilha, o acesso do líder, os atendentes, as sessões e todos os resultados vinculados. Esta ação é irreversível.`
+          );
+          if (!confirmation) return;
+          const typedName = prompt(`Para confirmar, digite exatamente o nome da ilha: ${islandName}`);
+          if (typedName !== islandName) {
+            alert("Nome não confere. A ilha não foi removida.");
+            return;
+          }
+          try {
+            await callRpc(RPC.removerIlhaAdmin, rpcArgsForAdmin({ p_ilha_id: islandId }));
+            await loadAdminIslands();
+            await loadIslands();
+            setMessage("createIslandMessage", "Ilha removida com sucesso.", true);
+          } catch (error) {
+            alert("Não foi possível remover a ilha: " + error.message);
+          }
+        });
+      });
+    }
+
+    $("adminLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("adminLoginMessage", "");
+      if (!requireDatabase()) return;
+
+      const button = event.submitter;
+      button.disabled = true;
+      try {
+        await loginAdmin($("adminPassword").value);
+        $("adminPassword").value = "";
+        showView("admin");
+        await loadAdminIslands();
+      } catch (error) {
+        adminSession = null;
+        setMessage("adminLoginMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("createIslandForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("createIslandMessage", "");
+
+      const name = $("newIslandName").value.trim();
+      const password = $("newLeaderPassword").value;
+      const confirmation = $("newLeaderPassword2").value;
+
+      if (name.length < 2) {
+        setMessage("createIslandMessage", "Informe um nome de ilha válido.");
+        return;
+      }
+      if (password.length < 8) {
+        setMessage("createIslandMessage", "A senha do líder deve ter pelo menos 8 caracteres.");
+        return;
+      }
+      if (password !== confirmation) {
+        setMessage("createIslandMessage", "As senhas não coincidem.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+      try {
+        await callRpc(RPC.criarIlhaAdmin, rpcArgsForAdmin({
+          p_nome: name,
+          p_senha_lider: password
+        }));
+        $("createIslandForm").reset();
+        setMessage("createIslandMessage", "Ilha criada e acesso do líder configurado.", true);
+        await loadAdminIslands();
+        await loadIslands();
+      } catch (error) {
+        setMessage("createIslandMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("adminRefreshIslands").addEventListener("click", async () => {
+      try {
+        await loadAdminIslands();
+        await loadIslands();
+      } catch (error) {
+        alert("Não foi possível atualizar as ilhas: " + error.message);
+      }
+    });
+
+    async function loginLeader(islandId, password) {
+      const data = await callRpc(RPC.loginLider, {
+        p_ilha_id: islandId,
+        p_senha: password
+      });
+
+      const row = Array.isArray(data) ? data[0] : data;
+
+      if (!row || row.autorizado !== true || !row.token) {
+        throw new Error("Senha incorreta ou acesso não autorizado para esta ilha.");
+      }
+
+      leaderSession = {
+        token: row.token,
+        ilha_id: String(row.ilha_id ?? islandId),
+        ilha_nome: String(row.ilha_nome ?? ilhas.find(i => i.id === islandId)?.nome ?? "")
+      };
+    }
+
+    async function loginAttendant(islandId, attendantId, password) {
+      const data = await callRpc(RPC.loginAtendente, {
+        p_ilha_id: islandId,
+        p_atendente_id: attendantId,
+        p_senha: password
+      });
+
+      const row = Array.isArray(data) ? data[0] : data;
+
+      if (!row || row.autorizado !== true || !row.token) {
+        throw new Error("Nome, ilha ou senha inválidos.");
+      }
+
+      attendantSession = {
+        token: row.token,
+        atendente_id: String(row.atendente_id ?? attendantId),
+        atendente_nome: String(row.atendente_nome ?? atendentesPublicos.find(p => p.id === attendantId)?.nome ?? ""),
+        ilha_id: String(row.ilha_id ?? islandId),
+        ilha_nome: String(row.ilha_nome ?? ilhas.find(i => i.id === islandId)?.nome ?? "")
+      };
+    }
+
+    $("leaderLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("leaderLoginMessage", "");
+
+      if (!requireDatabase()) return;
+
+      const islandId = $("leaderIsland").value;
+      const password = $("leaderPassword").value;
+
+      if (!islandId || !password) {
+        setMessage("leaderLoginMessage", "Selecione sua ilha e informe sua senha.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+
+      try {
+        await loginLeader(islandId, password);
+        $("leaderPassword").value = "";
+        $("leaderIslandLabel").textContent = leaderSession.ilha_nome || "Sua ilha";
+        await loadLeaderData();
+        showLeaderTab("overview");
+        showView("leader");
+      } catch (error) {
+        leaderSession = null;
+        setMessage("leaderLoginMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("attendantLoginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("attendantLoginMessage", "");
+
+      if (!requireDatabase()) return;
+
+      const islandId = $("attendantIsland").value;
+      const attendantId = $("attendantLoginName").value;
+      const password = $("attendantLoginPassword").value;
+
+      if (!islandId || !attendantId || !password) {
+        setMessage("attendantLoginMessage", "Preencha a ilha, o nome e a senha.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+
+      try {
+        await loginAttendant(islandId, attendantId, password);
+        $("attendantLoginPassword").value = "";
+        await loadAttendantDashboard();
+        showView("attendant");
+      } catch (error) {
+        attendantSession = null;
+        setMessage("attendantLoginMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("attendantIsland").addEventListener("change", event => {
+      setMessage("attendantLoginMessage", "");
+      loadPublicAttendants(event.target.value);
+    });
+
+    /* =========================================================
+       PAINEL DO LÍDER
+       ========================================================= */
+
+    async function loadLeaderData() {
+      if (!leaderSession?.token) return;
+
+      setStatus("Atualizando dados...", false);
+
+      const [peopleData, resultsData] = await Promise.all([
+        callRpc(RPC.listarAtendentesLider, rpcArgsForLeader()),
+        callRpc(RPC.listarResultadosLider, rpcArgsForLeader())
+      ]);
+
+      people = normalizeRows(peopleData);
+      results = normalizeRows(resultsData);
+
+      renderPeople();
+      renderPeopleOptions();
+      renderLeaderDashboard();
+
+      setStatus("Dados atualizados", true);
+    }
+
+    function renderPeopleOptions() {
+      const activePeople = people.filter(person => person.ativo !== false);
+
+      [
+        ["passwordAttendant", "Selecione o atendente..."],
+        ["resultAttendant", "Selecione o atendente..."]
+      ].forEach(([selectId, placeholder]) => {
+        const select = $(selectId);
+        const previous = select.value;
+
+        select.innerHTML = "";
+        const first = document.createElement("option");
+        first.value = "";
+        first.textContent = placeholder;
+        select.appendChild(first);
+
+        activePeople.forEach(person => {
+          const option = document.createElement("option");
+          option.value = String(person.id ?? person.atendente_id ?? "");
+          option.textContent = String(person.nome ?? person.atendente_nome ?? "");
+          select.appendChild(option);
+        });
+
+        if ([...select.options].some(option => option.value === previous)) {
+          select.value = previous;
+        }
+      });
+    }
+
+    function renderPeople() {
+      const target = $("peopleTable");
+
+      if (!people.length) {
+        target.innerHTML = '<div class="empty">Nenhum atendente cadastrado nesta ilha.</div>';
+        return;
+      }
+
+      target.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          ${people.map(person => {
+        const id = String(person.id ?? person.atendente_id ?? "");
+        const name = String(person.nome ?? person.atendente_nome ?? "");
+        const active = person.ativo !== false;
+        return `
+              <tr>
+                <td>${escapeHtml(name)}</td>
+                <td><span class="pill">${active ? "Ativo" : "Inativo"}</span></td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn small" type="button" data-reset-person="${escapeHtml(id)}">Alterar senha</button>
+                    <button class="btn danger small" type="button" data-delete-person="${escapeHtml(id)}">Excluir</button>
+                  </div>
+                </td>
+              </tr>`;
+      }).join("")}
+        </tbody>
+      </table>
+    </div>`;
+
+      target.querySelectorAll("[data-reset-person]").forEach(button => {
+        button.addEventListener("click", () => {
+          $("passwordAttendant").value = button.dataset.resetPerson;
+          showLeaderTab("passwords");
+          $("newPassword").focus();
+        });
+      });
+
+      target.querySelectorAll("[data-delete-person]").forEach(button => {
+        button.addEventListener("click", async () => {
+          const personId = button.dataset.deletePerson;
+          const person = people.find(p => String(p.id ?? p.atendente_id) === personId);
+          const name = person?.nome ?? person?.atendente_nome ?? "este atendente";
+
+          if (!confirm(`Deseja realmente excluir ${name}? Essa ação pode remover o acesso dessa pessoa.`)) return;
+
+          try {
+            await callRpc(RPC.excluirAtendente, rpcArgsForLeader({
+              p_atendente_id: personId
+            }));
+            await loadLeaderData();
+          } catch (error) {
+            alert("Não foi possível excluir o atendente: " + error.message);
+          }
+        });
+      });
+    }
+
+    function renderLeaderDashboard() {
+      $("kpiPeople").textContent = people.filter(p => p.ativo !== false).length;
+      $("kpiRecords").textContent = results.length;
+
+      const csatValues = results.map(csat);
+      const csatAverage = csatValues.length
+        ? csatValues.reduce((sum, value) => sum + value, 0) / csatValues.length
+        : 0;
+
+      const productivityAverage = results.length
+        ? results.reduce((sum, row) => sum + Number(row.produtividade_dia || 0), 0) / results.length
+        : 0;
+
+      $("kpiCsat").textContent = fmtNumber(csatAverage) + "%";
+      $("kpiProd").textContent = fmtNumber(productivityAverage, 2);
+      const avgField = key => results.length ? results.reduce((sum, row) => sum + Number(row[key] || 0), 0) / results.length : 0;
+      const fmtTime = value => { const n = Math.max(0, Math.round(Number(value) || 0)); return String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0"); };
+      $("kpiProdHora").textContent = fmtNumber(productivityAverage / 6, 2);
+      $("kpiTmaWeb").textContent = fmtTime(avgField("tma_web"));
+      $("kpiTmaTel").textContent = fmtTime(avgField("tma_telefone"));
+      $("kpiAssiduidade").textContent = fmtNumber(avgField("assiduidade")) + "%";
+      $("kpiFcr").textContent = fmtNumber(avgField("fcr")) + "%";
+      $("kpiCtr").textContent = fmtNumber(results.reduce((sum, row) => sum + Number(row.ctr || 0), 0));
+      $("kpiFaltas").textContent = results.filter(row => String(row.status || "").toLowerCase() === "falta").length;
+
+      const byDay = {};
+      results.forEach(row => {
+        if (!row.data) return;
+        if (!byDay[row.data]) byDay[row.data] = [];
+        byDay[row.data].push(csat(row));
+      });
+
+      const dates = Object.keys(byDay).sort().slice(-14);
+
+      if (leaderChart) leaderChart.destroy();
+
+      leaderChart = new Chart($("leaderChart"), {
+        type: "line",
+        data: {
+          labels: dates.map(fmtDate),
+          datasets: [{
+            label: "CSAT médio (%)",
+            data: dates.map(date => byDay[date].reduce((a, b) => a + b, 0) / byDay[date].length),
+            borderColor: "#ff6d01",
+            backgroundColor: "rgba(255,109,1,.15)",
+            fill: true,
+            tension: .3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, ticks: { color: "#aaa" }, grid: { color: "#383838" } },
+            x: { ticks: { color: "#aaa" }, grid: { color: "#383838" } }
+          },
+          plugins: { legend: { labels: { color: "#ddd" } } }
+        }
+      });
+
+      const destroyExtra = chart => { if (chart) chart.destroy(); };
+      [leaderAttendanceChart, leaderCsatPeopleChart, leaderTmaChart, leaderProductivityChart, leaderCsatTrendChart].forEach(destroyExtra);
+      const baseOpts = { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: "#aaa" }, grid: { color: "#383838" } }, x: { ticks: { color: "#aaa" }, grid: { color: "#383838" } } }, plugins: { legend: { labels: { color: "#ddd" } } } };
+      const namesByPerson = {};
+      results.forEach(row => { const name = row.atendente_nome ?? row.nome ?? people.find(p => String(p.id) === String(row.atendente_id))?.nome ?? "Atendente"; (namesByPerson[name] ||= []).push(row); });
+      const names = Object.keys(namesByPerson).sort();
+      const personAvg = (name, key, calc = row => Number(row[key] || 0)) => namesByPerson[name].reduce((sum, row) => sum + calc(row), 0) / namesByPerson[name].length;
+      const chartBar = (id, label, data, max = undefined) => new Chart($(id), { type: "bar", data: { labels: names, datasets: [{ label, data, backgroundColor: "#ff6d01" }] }, options: { ...baseOpts, indexAxis: "y", scales: { x: { beginAtZero: true, max, ticks: { color: "#aaa" }, grid: { color: "#383838" } }, y: baseOpts.scales.x } } });
+      leaderAttendanceChart = chartBar("leaderAttendanceChart", "Assiduidade (%)", names.map(n => personAvg(n, "assiduidade")), 100);
+      leaderCsatPeopleChart = chartBar("leaderCsatPeopleChart", "CSAT (%)", names.map(n => personAvg(n, "CSAT", csat)), 100);
+      leaderTmaChart = new Chart($("leaderTmaChart"), { type: "bar", data: { labels: names, datasets: [{ label: "TMA Web (min)", data: names.map(n => personAvg(n, "tma_web")), backgroundColor: "#ff6d01" }, { label: "TMA Telefone (min)", data: names.map(n => personAvg(n, "tma_telefone")), backgroundColor: "#fbbf24" }] }, options: { ...baseOpts, indexAxis: "y" } });
+      leaderProductivityChart = new Chart($("leaderProductivityChart"), { type: "bar", data: { labels: dates.map(fmtDate), datasets: [{ label: "Produtividade/dia", data: dates.map(d => byDay[d].reduce((sum, row) => sum + Number(row.produtividade_dia || 0), 0) / byDay[d].length), backgroundColor: "#ff6d01" }] }, options: baseOpts });
+      leaderCsatTrendChart = new Chart($("leaderCsatTrendChart"), { type: "line", data: { labels: dates.map(fmtDate), datasets: [{ label: "CSAT (%)", data: dates.map(d => byDay[d].reduce((sum, row) => sum + csat(row), 0) / byDay[d].length), borderColor: "#ff6d01", backgroundColor: "rgba(255,109,1,.15)", fill: true, tension: .3 }, { label: "Meta 90%", data: dates.map(() => 90), borderColor: "#22c55e", borderDash: [5, 5], pointRadius: 0 }] }, options: { ...baseOpts, scales: { ...baseOpts.scales, y: { ...baseOpts.scales.y, max: 100 } } } });
+
+      const recent = [...results].sort((a, b) =>
+        String(b.data || "").localeCompare(String(a.data || ""))
+      ).slice(0, 8);
+
+      $("recentResults").innerHTML = recent.length
+        ? `<div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Atendente</th><th>CSAT</th><th>Produtividade</th><th>Anotação</th></tr></thead>
+        <tbody>${recent.map(row => `
+          <tr>
+            <td>${fmtDate(row.data)}</td>
+            <td>${escapeHtml(row.atendente_nome ?? row.nome ?? "—")}</td>
+            <td>${fmtNumber(csat(row))}%</td>
+            <td>${fmtNumber(row.produtividade_dia, 2)}</td>
+            <td>${row.observacao ? `<button class="btn small" type="button" data-view-note="${escapeHtml(String(row.id ?? row.resultado_id ?? ""))}">Ver anotação</button>` : '<span class="muted">Sem anotação</span>'}</td>
+          </tr>`).join("")}</tbody>
+      </table></div>`
+        : '<div class="empty">Nenhum resultado cadastrado.</div>';
+
+      $("recentResults").querySelectorAll("[data-view-note]").forEach(button => button.addEventListener("click", () => showResultNote(button.dataset.viewNote)));
+      renderResultsTable();
+    }
+
+    function showResultNote(id) {
+      const row = results.find(item => String(item.id ?? item.resultado_id ?? "") === String(id));
+      if (!row) return alert("Não foi possível localizar a anotação desse registro.");
+      alert(String(row.observacao || "").trim() || "Este resultado não possui anotação.");
+    }
+
+    function renderResultsTable() {
+      const sorted = [...results].sort((a, b) =>
+        String(b.data || "").localeCompare(String(a.data || ""))
+      );
+
+      $("resultsTable").innerHTML = sorted.length
+        ? `<div class="table-wrap"><table>
+        <thead>
+          <tr>
+            <th>Data</th><th>Atendente</th><th>Status</th><th>CSAT</th>
+            <th>Prod./dia</th><th>TMA Web</th><th>TMA Tel.</th><th>Assiduidade</th><th>FCR</th><th>CTR</th><th>Anotação</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(row => {
+          const id = String(row.id ?? row.resultado_id ?? "");
+          return `<tr>
+              <td>${fmtDate(row.data)}</td>
+              <td>${escapeHtml(row.atendente_nome ?? row.nome ?? "—")}</td>
+              <td>${escapeHtml(row.status ?? "Presença")}</td>
+              <td>${fmtNumber(csat(row))}%</td>
+              <td>${fmtNumber(row.produtividade_dia, 2)}</td>
+              <td>${fmtNumber(row.tma_web, 2)}</td>
+              <td>${fmtNumber(row.tma_telefone, 2)}</td>
+              <td>${fmtNumber(row.assiduidade)}%</td>
+              <td>${fmtNumber(row.fcr)}%</td>
+              <td>${fmtNumber(row.ctr)}%</td>
+              <td>${row.observacao ? `<button class="btn small" type="button" data-view-note="${escapeHtml(id)}">Visualizar</button>` : '<span class="muted">—</span>'}</td>
+              <td><div class="row-actions">
+                <button class="btn small" type="button" data-edit-result="${escapeHtml(id)}">Editar</button>
+                <button class="btn danger small" type="button" data-delete-result="${escapeHtml(id)}">Excluir</button>
+              </div></td>
+            </tr>`;
+        }).join("")}
+        </tbody>
+      </table></div>`
+        : '<div class="empty">Nenhum resultado cadastrado.</div>';
+
+      $("resultsTable").querySelectorAll("[data-edit-result]").forEach(button => {
+        button.addEventListener("click", () => {
+          const row = results.find(r => String(r.id ?? r.resultado_id ?? "") === button.dataset.editResult);
+          if (row) fillResultForm(row);
+        });
+      });
+
+      $("resultsTable").querySelectorAll("[data-view-note]").forEach(button => button.addEventListener("click", () => showResultNote(button.dataset.viewNote)));
+
+      $("resultsTable").querySelectorAll("[data-delete-result]").forEach(button => {
+        button.addEventListener("click", async () => {
+          if (!confirm("Deseja excluir este resultado diário?")) return;
+
+          try {
+            await callRpc(RPC.excluirResultado, rpcArgsForLeader({
+              p_resultado_id: button.dataset.deleteResult
+            }));
+            setMessage("resultFormMessage", "Resultado excluído.", true);
+            await loadLeaderData();
+          } catch (error) {
+            setMessage("resultFormMessage", error.message);
+          }
+        });
+      });
+    }
+
+    $("addAttendantForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("addAttendantMessage", "");
+
+      const name = $("newAttendantName").value.trim();
+      const password = $("newAttendantPassword").value;
+      const confirmation = $("newAttendantPassword2").value;
+
+      if (name.length < 2) {
+        setMessage("addAttendantMessage", "Informe um nome válido.");
+        return;
+      }
+
+      if (password.length < 6) {
+        setMessage("addAttendantMessage", "A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      if (password !== confirmation) {
+        setMessage("addAttendantMessage", "As senhas não coincidem.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+
+      try {
+        await callRpc(RPC.criarAtendente, rpcArgsForLeader({
+          p_nome: name,
+          p_senha: password
+        }));
+
+        $("addAttendantForm").reset();
+        setMessage("addAttendantMessage", "Atendente cadastrado com sucesso.", true);
+        await loadLeaderData();
+      } catch (error) {
+        setMessage("addAttendantMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    $("resetPasswordForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("resetPasswordMessage", "");
+
+      const attendantId = $("passwordAttendant").value;
+      const password = $("newPassword").value;
+      const confirmation = $("newPassword2").value;
+
+      if (!attendantId) {
+        setMessage("resetPasswordMessage", "Selecione um atendente.");
+        return;
+      }
+
+      if (password.length < 6) {
+        setMessage("resetPasswordMessage", "A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      if (password !== confirmation) {
+        setMessage("resetPasswordMessage", "As senhas não coincidem.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+
+      try {
+        await callRpc(RPC.alterarSenhaAtendente, rpcArgsForLeader({
+          p_atendente_id: attendantId,
+          p_nova_senha: password
+        }));
+
+        $("resetPasswordForm").reset();
+        setMessage("resetPasswordMessage", "Senha alterada com sucesso.", true);
+      } catch (error) {
+        setMessage("resetPasswordMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    function readNumber(id) {
+      return Number($(id).value || 0);
+    }
+
+    function fillResultForm(row) {
+      editingResultId = String(row.id ?? row.resultado_id ?? "");
+      $("resultAttendant").value = String(row.atendente_id ?? "");
+      $("resultDate").value = String(row.data ?? "").slice(0, 10);
+      $("resultStatus").value = row.status ?? "Presença";
+      $("resultTotal").value = Number(row.total_avaliacoes ?? 0);
+      $("resultSatisfied").value = Number(row.avaliacoes_satisfeitas ?? 0);
+      $("resultProductivity").value = Number(row.produtividade_dia ?? 0);
+      $("resultTmaWeb").value = Number(row.tma_web ?? 0);
+      $("resultTmaTel").value = Number(row.tma_telefone ?? 0);
+      $("resultAssiduidade").value = Number(row.assiduidade ?? 100);
+      $("resultFcr").value = Number(row.fcr ?? 0);
+      $("resultCtr").value = Number(row.ctr ?? 0);
+      $("resultNote").value = row.observacao ?? "";
+      setMessage("resultFormMessage", "Editando resultado selecionado.", true);
+      showLeaderTab("results");
+      $("resultForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    $("cancelEditResult").addEventListener("click", () => {
+      editingResultId = null;
+      $("resultForm").reset();
+      $("resultDate").value = todayLocal();
+      setMessage("resultFormMessage", "");
+    });
+
+    $("resultForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      setMessage("resultFormMessage", "");
+
+      const total = readNumber("resultTotal");
+      const satisfied = readNumber("resultSatisfied");
+      const assiduidade = readNumber("resultAssiduidade");
+      const fcr = readNumber("resultFcr");
+      const ctr = readNumber("resultCtr");
+
+      if (satisfied > total) {
+        setMessage("resultFormMessage", "As avaliações satisfeitas não podem ser maiores que o total de avaliações.");
+        return;
+      }
+
+      if ([assiduidade, fcr, ctr].some(value => value < 0 || value > 100)) {
+        setMessage("resultFormMessage", "Assiduidade, FCR e CTR devem estar entre 0 e 100.");
+        return;
+      }
+
+      const button = event.submitter;
+      button.disabled = true;
+
+      try {
+        const payload = {
+          p_atendente_id: $("resultAttendant").value,
+          p_data: $("resultDate").value,
+          p_status: $("resultStatus").value,
+          p_total_avaliacoes: total,
+          p_avaliacoes_satisfeitas: satisfied,
+          p_produtividade_dia: readNumber("resultProductivity"),
+          p_tma_web: readNumber("resultTmaWeb"),
+          p_tma_telefone: readNumber("resultTmaTel"),
+          p_assiduidade: assiduidade,
+          p_fcr: fcr,
+          p_ctr: ctr,
+          p_observacao: $("resultNote").value.trim()
+        };
+
+        if (!payload.p_atendente_id || !payload.p_data) {
+          throw new Error("Selecione um atendente e uma data.");
+        }
+
+        if (editingResultId) payload.p_resultado_id = editingResultId;
+
+        await callRpc(RPC.salvarResultado, rpcArgsForLeader(payload));
+
+        editingResultId = null;
+        $("resultForm").reset();
+        $("resultDate").value = todayLocal();
+        setMessage("resultFormMessage", "Resultado salvo com sucesso.", true);
+        await loadLeaderData();
+      } catch (error) {
+        setMessage("resultFormMessage", error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    /* =========================================================
+       PAINEL DO ATENDENTE
+       ========================================================= */
+
+    async function loadAttendantDashboard() {
+      if (!attendantSession?.token) return;
+
+      const data = await callRpc(
+        RPC.listarResultadosAtendente,
+        rpcArgsForAttendant()
+      );
+      const ownResults = normalizeRows(data);
+
+      $("attendantGreeting").textContent = attendantSession.atendente_nome;
+      $("attendantIslandLabel").textContent = attendantSession.ilha_nome || "Área individual";
+
+      const average = key => ownResults.length
+        ? ownResults.reduce((sum, row) => sum + Number(row[key] || 0), 0) / ownResults.length
+        : 0;
+      const total = key => ownResults.reduce((sum, row) => sum + Number(row[key] || 0), 0);
+      const csatAverage = ownResults.length
+        ? ownResults.reduce((sum, row) => sum + csat(row), 0) / ownResults.length
+        : 0;
+      const fmtMinutes = value => {
+        const mins = Math.max(0, Math.round(Number(value || 0)));
+        return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+      };
+
+      $("ownCsat").textContent = fmtNumber(csatAverage) + "%";
+      $("ownProd").textContent = fmtNumber(average("produtividade_dia"), 2);
+      $("ownProdHora").textContent = fmtNumber(average("produtividade_dia") / 6, 2);
+      $("ownTmaWeb").textContent = fmtMinutes(average("tma_web"));
+      $("ownTmaTel").textContent = fmtMinutes(average("tma_telefone"));
+      $("ownAssiduidade").textContent = fmtNumber(average("assiduidade")) + "%";
+      $("ownFcr").textContent = fmtNumber(average("fcr")) + "%";
+      $("ownCtr").textContent = fmtNumber(total("ctr"), 0);
+      $("ownFaltas").textContent = ownResults.filter(row => /falta|ausente/i.test(String(row.status || ""))).length;
+      $("ownRecords").textContent = String(ownResults.length);
+
+      const sorted = [...ownResults].sort((a, b) =>
+        String(a.data || "").localeCompare(String(b.data || ""))
+      );
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { color: "#aaa" }, grid: { color: "#383838" } },
+          x: { ticks: { color: "#aaa" }, grid: { color: "#383838" } }
+        },
+        plugins: { legend: { labels: { color: "#ddd" } } }
+      };
+      [ownChart, ownAttendanceChart, ownProductivityChart, ownTmaChart].forEach(chart => {
+        if (chart) chart.destroy();
+      });
+      const labels = sorted.map(row => fmtDate(row.data));
+      ownChart = new Chart($("ownChart"), {
+        type: "line",
+        data: { labels, datasets: [{ label: "CSAT (%)", data: sorted.map(csat), borderColor: "#ff6d01", backgroundColor: "rgba(255,109,1,.15)", fill: true, tension: .3 }] },
+        options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 100 } } }
+      });
+      ownAttendanceChart = new Chart($("ownAttendanceChart"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "Assiduidade (%)", data: sorted.map(row => Number(row.assiduidade || 0)), backgroundColor: "#ff6d01" }] },
+        options: { ...chartOptions, scales: { ...chartOptions.scales, y: { ...chartOptions.scales.y, max: 100 } } }
+      });
+      ownProductivityChart = new Chart($("ownProductivityChart"), {
+        type: "line",
+        data: { labels, datasets: [{ label: "Produtividade/dia", data: sorted.map(row => Number(row.produtividade_dia || 0)), borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,.12)", fill: true, tension: .3 }] },
+        options: chartOptions
+      });
+      ownTmaChart = new Chart($("ownTmaChart"), {
+        type: "bar",
+        data: {
+          labels, datasets: [
+            { label: "TMA Web (min)", data: sorted.map(row => Number(row.tma_web || 0)), backgroundColor: "#ff6d01" },
+            { label: "TMA Telefone (min)", data: sorted.map(row => Number(row.tma_telefone || 0)), backgroundColor: "#a3a3a3" }
+          ]
+        },
+        options: chartOptions
+      });
+
+      $("ownResultsTable").innerHTML = sorted.length
+        ? `<div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Status</th><th>CSAT</th><th>Prod./dia</th><th>TMA Web</th><th>TMA Tel.</th><th>Assiduidade</th><th>FCR</th><th>CTR</th><th>Anotações</th></tr></thead>
+        <tbody>${[...sorted].reverse().map(row => `
+          <tr>
+            <td>${fmtDate(row.data)}</td>
+            <td>${escapeHtml(row.status ?? "Presença")}</td>
+            <td>${fmtNumber(csat(row))}%</td>
+            <td>${fmtNumber(row.produtividade_dia, 2)}</td>
+            <td>${fmtNumber(row.tma_web, 2)}</td>
+            <td>${fmtNumber(row.tma_telefone, 2)}</td>
+            <td>${fmtNumber(row.assiduidade)}%</td>
+            <td>${fmtNumber(row.fcr)}%</td>
+            <td>${fmtNumber(row.ctr, 0)}</td>
+            <td style="white-space:normal;min-width:220px;max-width:360px">${escapeHtml(row.observacao || row.anotacao || row.anotacoes || "Sem anotações")}</td>
+          </tr>`).join("")}</tbody>
+      </table></div>`
+        : '<div class="empty">Ainda não há resultados para o seu cadastro.</div>';
+
+      setStatus("Dados carregados", true);
+    }
+
+    /* =========================================================
+       NAVEGAÇÃO, ATUALIZAÇÃO E SAÍDA
+       ========================================================= */
+
+    $("startBtn")?.addEventListener("click", () => {
+      $("homeChoices")?.classList.toggle("hidden");
+    });
+
+    $("goAdmin").addEventListener("click", () => {
+      setMessage("adminLoginMessage", "");
+      showView("admin-login");
+    });
+
+    $("goLeader").addEventListener("click", () => {
+      setMessage("leaderLoginMessage", "");
+      showView("leader-login");
+    });
+
+    $("goAttendant").addEventListener("click", () => {
+      setMessage("attendantLoginMessage", "");
+      showView("attendant-login");
+    });
+
+    $("homeBtn").addEventListener("click", () => {
+      clearSessions();
+      showView("home");
+    });
+
+    document.querySelectorAll("[data-home]").forEach(button => {
+      button.addEventListener("click", () => showView("home"));
+    });
+
+    document.querySelectorAll("[data-leader-tab]").forEach(button => {
+      button.addEventListener("click", () => showLeaderTab(button.dataset.leaderTab));
+    });
+
+    $("leaderRefresh").addEventListener("click", async () => {
+      try {
+        await loadLeaderData();
+      } catch (error) {
+        alert("Não foi possível atualizar: " + error.message);
+      }
+    });
+
+    $("peopleRefresh").addEventListener("click", async () => {
+      try {
+        await loadLeaderData();
+      } catch (error) {
+        alert("Não foi possível carregar os atendentes: " + error.message);
+      }
+    });
+
+    $("resultsRefresh").addEventListener("click", async () => {
+      try {
+        await loadLeaderData();
+      } catch (error) {
+        alert("Não foi possível carregar os resultados: " + error.message);
+      }
+    });
+
+    $("adminLogout").addEventListener("click", () => {
+      clearSessions();
+      showView("home");
+    });
+
+    $("leaderLogout").addEventListener("click", () => {
+      clearSessions();
+      showView("home");
+    });
+
+    $("attendantLogout").addEventListener("click", () => {
+      clearSessions();
+      showView("home");
+    });
+
+    function clearSessions() {
+      adminSession = null;
+      leaderSession = null;
+      attendantSession = null;
+      people = [];
+      results = [];
+      editingResultId = null;
+
+      $("adminPassword").value = "";
+      $("leaderPassword").value = "";
+      $("attendantLoginPassword").value = "";
+
+      $("leaderLoginForm").reset();
+      $("attendantLoginForm").reset();
+
+      $("attendantLoginName").innerHTML =
+        '<option value="">Selecione primeiro a ilha</option>';
+      $("attendantLoginName").disabled = true;
+
+      if (leaderChart) {
+        leaderChart.destroy();
+        leaderChart = null;
+      }
+
+      if (ownChart) { ownChart.destroy(); ownChart = null; }
+      if (ownAttendanceChart) { ownAttendanceChart.destroy(); ownAttendanceChart = null; }
+      if (ownProductivityChart) { ownProductivityChart.destroy(); ownProductivityChart = null; }
+      if (ownTmaChart) { ownTmaChart.destroy(); ownTmaChart = null; }
+
+      setMessage("adminLoginMessage", "");
+      setMessage("createIslandMessage", "");
+      setMessage("leaderLoginMessage", "");
+      setMessage("attendantLoginMessage", "");
+      setMessage("addAttendantMessage", "");
+      setMessage("resetPasswordMessage", "");
+      setMessage("resultFormMessage", "");
+    }
+
+    $("resultDate").value = todayLocal();
+
+    /* =========================================================
+       INÍCIO DA APLICAÇÃO
+       ========================================================= */
+
+    (async function startApplication() {
+      showView("home");
+
+      if (!initializeSupabase()) {
+        fillIslandSelect("leaderIsland", "Configure o Supabase primeiro");
+        fillIslandSelect("attendantIsland", "Configure o Supabase primeiro");
+        return;
+      }
+
+      try {
+        await loadIslands();
+        setStatus("Supabase conectado", true);
+      } catch (error) {
+        setStatus("Erro de configuração", false);
+        console.error(error);
+      }
+    })();
+  </script>
+</body>
+
+</html>
